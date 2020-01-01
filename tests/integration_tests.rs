@@ -1,6 +1,6 @@
 extern crate color_schemes;
 
-use color_schemes::colors::{get_d65_ciexyz, Color, DisplayP3, CIEXYY, CIEXYZ, SRGB};
+use color_schemes::colors::{get_d65_ciexyz, Color, DisplayP3, CIELUV, CIEXYY, CIEXYZ, SRGB};
 use color_schemes::errors::Error;
 use color_schemes::utils::contrast_ratio;
 use nalgebra::Vector3;
@@ -80,4 +80,15 @@ fn test_display_p3_green() -> Result<(), Error> {
     assert_within_delta!(y, 0.690, 0.0001);
 
     Ok(())
+}
+
+#[test]
+fn test_cieluv() {
+    let cieluv = CIELUV::from_vector3(Vector3::new(0.5, 0.25, 0.25));
+    let to_xyz_and_back = CIELUV::from_ciexyz(&cieluv.to_ciexyz());
+    assert_within_delta!(
+        (cieluv.to_vector3() - to_xyz_and_back.to_vector3()).magnitude(),
+        0.0,
+        0.0001
+    );
 }
