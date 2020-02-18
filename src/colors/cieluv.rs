@@ -15,6 +15,29 @@ pub struct CIELUV {
     vec: Vector3<f64>, // Components are L, u, and v
 }
 
+impl CIELUV {
+    pub fn chroma(&self) -> f64 {
+        let u = self.vec[1];
+        let v = self.vec[2];
+        (u.powf(2.0) + v.powf(2.0)).sqrt()
+    }
+
+    // In radians
+    pub fn hue(&self) -> f64 {
+        let u = self.vec[1];
+        let v = self.vec[2];
+        v.atan2(u)
+    }
+
+    pub fn as_lch(&self) -> (f64, f64, f64) {
+        (self.vec[0], self.chroma(), self.hue())
+    }
+
+    pub fn from_lch(l: f64, c: f64, h: f64) -> Self {
+        Self::from_vector3(Vector3::new(l, c * h.cos(), c * h.sin()))
+    }
+}
+
 #[allow(non_snake_case)]
 fn uv_chromaticities(color: &CIEXYZ) -> (f64, f64) {
     let color_vec = color.to_vector3();
@@ -84,5 +107,32 @@ impl Color for CIELUV {
 
     fn to_vector3(&self) -> Vector3<f64> {
         self.vec
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_luv_lch_identity() {
+        let lightness = 0.5;
+        let chroma = 0.25;
+        let hue = 0.0;
+
+        let color = CIELUV::from_lch(lightness, chroma, hue);
+
+        assert_eq!(color.as_lch(), (lightness, chroma, hue));
+    }
+
+    #[test]
+    fn test_luv_lch_identity_2() {
+        let lightness = 0.5;
+        let chroma = 0.25;
+        let hue = -2.4;
+
+        let color = CIELUV::from_lch(lightness, chroma, hue);
+
+        assert_eq!(color.as_lch(), (lightness, chroma, hue));
     }
 }
